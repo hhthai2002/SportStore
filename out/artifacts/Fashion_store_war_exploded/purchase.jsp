@@ -2,27 +2,39 @@
          pageEncoding="UTF-8" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="dao.ProductDAO" %>
-<%@page import="java.util.*" %>
-<%@page import="entity.*" %>
-<%@page import="java.text.DecimalFormat" %>
+<%@ page import="entity.Cart" %>
+<%@ page import="java.text.DecimalFormat" %>
 <%
     DecimalFormat dcf = new DecimalFormat("#.##");
     request.setAttribute("dcf", dcf);
 
-    ArrayList<Cart> cart_list = (ArrayList<Cart>) session.getAttribute("cart-list");
-    ArrayList<Cart> cartProduct = null;
-    if (cart_list != null) {
+    // Get the user ID from the session as a String
+    String userIdStr = (String) session.getAttribute("idd");
+
+    // Check if the user ID exists
+    if (userIdStr != null) {
+        ArrayList<Cart> cartProduct = null;
         ProductDAO pDao = new ProductDAO();
-        cartProduct = pDao.getCartProducts(cart_list);
-        double total = pDao.getTotalCartPrice(cart_list);
+
+        // Get the list of products purchased by the user from the database
+        cartProduct = pDao.getProductsPurchasedByUser(userIdStr);
+
+        // Calculate the total price of the products purchased
+        double total = pDao.getTotalPriceOfProductsPurchasedByUser(userIdStr);
         request.setAttribute("total", total);
-        request.setAttribute("cart_list", cart_list);
+        request.setAttribute("cart_lists", cartProduct);
     }
 %>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase</title>
+    <!-- Add your CSS and JavaScript links here -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -131,8 +143,8 @@
     response.setHeader("Cache-control", "no-cache, no-store, must-revalidate");
     response.setHeader("Pragma", "no-cache");
     response.setHeader("Expires", "0");
-
 %>
+
 <jsp:include page="includes/header.jsp"/>
 
 <hr>
@@ -144,48 +156,32 @@
         <tr>
             <th scope="col">Name</th>
             <th scope="col">Price</th>
-            <th scope="col">Buy</th>
-            <th scope="col">Cancel</th>
+            <th scope="col">Quantity</th>
         </tr>
         </thead>
         <tbody>
         <%
-            if (cart_list != null) {
-                for (Cart c : cartProduct) {
+            ArrayList<Cart> cartList = (ArrayList<Cart>) request.getAttribute("cart_lists");
+            if (cartList != null) {
+                for (Cart c : cartList) {
         %>
         <tr>
-            <td><%=c.getShoesName()%>
+            <td><%= c.getShoesName() %>
             </td>
-            <td><%= dcf.format(c.getPrice())%>
+            <td>$ <%= dcf.format(c.getPrice()) %>
             </td>
-            <td>
-                <form class="form-inline" action="buyItem" method="POST">
-                    <input type="hidden" name="id" value="<%= c.getShoesID()%>" class="form-input">
-                    <input type="hidden" name="quantity" value="<%= c.getQuantity() %>">
-                    <div class="form-group d-flex justify-content-between">
-                        <a class="btn" href="quantitybutton?action=inc&id=<%=c.getShoesID()%>"><i class="fa fa-plus"
-                                                                                                  aria-hidden="true"></i></a>
-                        <input type="text" name="quantity" class="form-control" value="<%=c.getQuantity()%>" readonly>
-                        <a class="btn" href="quantitybutton?action=dec&id=<%=c.getShoesID()%>"><i class="fa fa-minus"
-                                                                                                  aria-hidden="true"></i></a>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm">Buy</button>
-                </form>
+            <td><%= c.getQuantity() %>
             </td>
-
-            <td><a href="rmv-item?itemid=<%=c.getShoesID() %>" class="btn btn-sm btn-danger">Remove</a></td>
         </tr>
-
         <%
                 }
-            }%>
+            }
+        %>
         </tbody>
     </table>
 </div>
 
-
 <jsp:include page="includes/footer.jsp"/>
-
 
 </body>
 </html>

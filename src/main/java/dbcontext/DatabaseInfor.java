@@ -1,8 +1,8 @@
 package dbcontext;
 
 public interface DatabaseInfor {
-	public static String driverName = "org.postgresql.Driver";
-	public static String url = "jdbc:postgresql://localhost:5432/fashionstore";
-	public static String user = "";
-	public static String pass = "";
+	public static String driverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+	public static String url = "jdbc:sqlserver://localhost:1433;database=fashionstore";
+	public static String user = "sa";
+	public static String pass = "123123";
 }
